@@ -6,7 +6,7 @@
 
   <p>
     All uploaded things are available at
-    <code>https://spag.cc?name</code><br />
+    <code>https://spag.cc/name</code><br />
 
     Replace <code>name</code> with the name you gave the image.
   </p>
@@ -211,7 +211,7 @@
       previewContainer.style.backgroundColor = "rgb(55, 67, 98)";
       previewContainer.style.border = "1px solid rgb(159, 174, 238)";
 
-      fetch(`https://spag.cc?${upload.name}`).then(async (response) => {
+      fetch(`https://spag.cc/${upload.name}`).then(async (response) => {
         if (!response.ok) {
           return;
         }
