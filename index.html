@@ -160,13 +160,10 @@
       const body = JSON.stringify({ name, dataUrl });
       uploadButton.disabled = true;
       uploadButton.textContent = "Uploading...";
-      const response = await fetch(
-        "https://todepond-labuploadupload.web.val.run",
-        {
-          method: "POST",
-          body,
-        }
-      );
+      const response = await fetch("https://todepond-spagUpload.web.val.run", {
+        method: "POST",
+        body,
+      });
       const data = await response.json();
       if (data.ok) {
         nameInput.value = "";
@@ -182,9 +179,7 @@
   );
 
   async function fetchUploads() {
-    const response = await fetch(
-      "https://todepond-labuploadgetuploads.web.val.run"
-    );
+    const response = await fetch("https://todepond-spagList.web.val.run");
     const data = await response.json();
     return data.rows;
   }
@@ -220,7 +215,7 @@
       previewContainer.style.backgroundColor = "rgb(55, 67, 98)";
       previewContainer.style.border = "1px solid rgb(159, 174, 238)";
 
-      fetch(`https://tode.party?${upload.name}`).then(async (response) => {
+      fetch(`https://spag.cc?${upload.name}`).then(async (response) => {
         if (!response.ok) {
           return;
         }
@@ -291,7 +286,7 @@
         deleteButton.disabled = true;
         deleteButton.textContent = "Deleting...";
         const response = await fetch(
-          `https://todepond-labuploaddelete.web.val.run`,
+          `https://todepond-spagDelete.web.val.run`,
           {
             method: "POST",
             body: JSON.stringify({ name: upload.name }),
