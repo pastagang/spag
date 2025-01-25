@@ -165,7 +165,6 @@
       const response = await fetch("https://todepond-spagUpload.web.val.run", {
         method: "POST",
         body,
-        mode: "no-cors",
       });
       const data = await response.json();
       if (data.ok) {
@@ -218,49 +217,63 @@
       previewContainer.style.backgroundColor = "rgb(55, 67, 98)";
       previewContainer.style.border = "1px solid rgb(159, 174, 238)";
 
-      fetch(`https://spag.cc/${upload.name}`).then(async (response) => {
-        if (!response.ok) {
-          return;
-        }
+      try {
+        fetch(`https://spag.cc/${upload.name}`).then(async (response) => {
+          if (!response.ok) {
+            const textElement = document.createElement("p");
+            console.log(response);
+            textElement.textContent = `Error downloading file.`;
+            previewContainer.appendChild(textElement);
+            return;
+          }
 
-        const contentType = response.headers.get("content-type");
-        if (contentType.startsWith("image")) {
-          const imageElement = document.createElement("img");
-          imageElement.loading = "lazy";
-          imageElement.style.width = "100%";
-          imageElement.style.objectFit = "contain";
-          imageElement.style.height = "300px";
-          // src the response
-          const blob = await response.blob();
-          imageElement.src = URL.createObjectURL(blob);
-          imageElement.onerror = () => {
-            imageElement.remove();
-          };
-          previewContainer.appendChild(imageElement);
-        } else if (contentType.startsWith("audio")) {
-          const audioElement = document.createElement("audio");
-          audioElement.controls = true;
-          audioElement.style.width = "100%";
-          // src the response
-          const blob = await response.blob();
-          audioElement.src = URL.createObjectURL(blob);
-          audioElement.onerror = () => {
-            audioElement.remove();
-          };
-          previewContainer.appendChild(audioElement);
-        } else if (contentType.startsWith("video")) {
-          const videoElement = document.createElement("video");
-          videoElement.controls = true;
-          videoElement.style.width = "100%";
-          // src the response
-          const blob = await response.blob();
-          videoElement.src = URL.createObjectURL(blob);
-          videoElement.onerror = () => {
-            videoElement.remove();
-          };
-          previewContainer.appendChild(videoElement);
-        }
-      });
+          const contentType = response.headers.get("content-type");
+          if (contentType.startsWith("image")) {
+            const imageElement = document.createElement("img");
+            imageElement.loading = "lazy";
+            imageElement.style.width = "100%";
+            imageElement.style.objectFit = "contain";
+            imageElement.style.height = "300px";
+            // src the response
+            const blob = await response.blob();
+            imageElement.src = URL.createObjectURL(blob);
+            imageElement.onerror = () => {
+              imageElement.remove();
+            };
+            previewContainer.appendChild(imageElement);
+          } else if (contentType.startsWith("audio")) {
+            const audioElement = document.createElement("audio");
+            audioElement.controls = true;
+            audioElement.style.width = "100%";
+            // src the response
+            const blob = await response.blob();
+            audioElement.src = URL.createObjectURL(blob);
+            audioElement.onerror = () => {
+              audioElement.remove();
+            };
+            previewContainer.appendChild(audioElement);
+          } else if (contentType.startsWith("video")) {
+            const videoElement = document.createElement("video");
+            videoElement.controls = true;
+            videoElement.style.width = "100%";
+            // src the response
+            const blob = await response.blob();
+            videoElement.src = URL.createObjectURL(blob);
+            videoElement.onerror = () => {
+              videoElement.remove();
+            };
+            previewContainer.appendChild(videoElement);
+          } else {
+            const textElement = document.createElement("p");
+            textElement.textContent = `Unsupported content type: ${contentType}`;
+            previewContainer.appendChild(textElement);
+          }
+        });
+      } catch (error) {
+        const textElement = document.createElement("p");
+        textElement.textContent = `Error downloading file.`;
+        previewContainer.appendChild(textElement);
+      }
 
       // const imageElement = document.createElement("img");
       // imageElement.loading = "lazy";
