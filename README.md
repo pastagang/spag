@@ -1,6 +1,8 @@
 # spag
 
-spag is a tool for uploading and sharing files
+spag is a tool for uploading and sharing files, made by [pastagang](https://pastagang.cc)
+
+## how to use it
 
 upload a file on [spag.cc](https://spag.cc)
 
@@ -8,7 +10,7 @@ give it a name.
 
 then access it at `https://spag.cc?name` (but replace `name` with the name you gave it)
 
-## Contributing
+## how to contribute to it
 
 You can edit the client-side code in this repo.
 
