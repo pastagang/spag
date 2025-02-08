@@ -428,6 +428,7 @@ input[type="file"]::file-selector-button {
 
 button:disabled {
   cursor: not-allowed;
+  background-color: rgb(152, 152, 152);
 }
 
 button.danger {
