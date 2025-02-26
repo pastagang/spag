@@ -8,7 +8,7 @@ upload a file on [spag.cc](https://spag.cc)
 
 give it a name.
 
-then access it at `https://spag.cc?name` (but replace `name` with the name you gave it)
+then access it at `https://spag.cc/name` (but replace `name` with the name you gave it)
 
 ## how to contribute to it
 

@@ -14,7 +14,7 @@
     All uploaded things are available at
     <code>https://spag.cc/name</code><br />
 
-    Replace <code>name</code> with the name you gave the image.
+    Replace <code>name</code> with the name you gave the image. Names can contain spaces, emojis, anything!
   </p>
 
   <ul>
@@ -23,6 +23,7 @@
       Please delete your uploads after you've finished with them to make space
       for others.
     </li>
+    <li>Click 'Record audio' to record your singing, then click 'Finish recording' when you are finished.</li>
   </ul>
 </header>
 
@@ -96,6 +97,11 @@
     </div>
     <input type="file" id="file" accept="audio/*, image/*" required />
   </label>
+  <label for ="singing">
+    <button id="record-button" type="button">Record audio</button>
+    <button id="stop-recording-button" type="button" disabled>Finish recording</button>
+
+  </label>
   <label for="name">
     Unique upload name
     <input
@@ -125,15 +131,21 @@
   const previewAudio = document.getElementById("preview-audio");
   const uploadButton = document.getElementById("upload-button");
   const refreshButton = document.getElementById("refresh-button");
+  const recordButton = document.getElementById("record-button");
+  const stopButton = document.getElementById("stop-recording-button");
+
+  var recorder;
+  const reader = new FileReader();
+
+  // fires every time the reader loads something
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    previewImage.src = dataUrl; // the form just grabs whatever is here and uploads this, which may even be audio
+    previewAudio.src = dataUrl;
+  };
 
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      previewImage.src = dataUrl;
-      previewAudio.src = dataUrl;
-    };
     reader.readAsDataURL(file);
   });
 
@@ -153,11 +165,47 @@
     previewImage.style.display = "none";
   });
 
+  
+  // MediaStream bits shamelessly cribbed from mozilla examples. https://mozdevs.github.io/MediaRecorder-examples/record-live-audio.js
+  recordButton.addEventListener("click", () => {
+    // ask if we can have ur mic pls, and then record
+    navigator.mediaDevices.getUserMedia({
+      audio: true
+    })
+    .then( function (stream) {  // uh oh... a promise
+      recorder = new MediaRecorder(stream);
+
+      // listen to dataavailable, which gets triggeled whenever there is audio available
+      recorder.addEventListener('dataavailable', (e) => {
+        // e.data is a blob with the truncated audio STREAM in it 
+        // convert it to a file so we can upload it
+        const file = new File( [e.data], "recording.ogg", {type: "audio/ogg"});
+        reader.readAsDataURL(file);
+        fileInput.required = false;  // so u can press upload without actually having uploaded a file
+      });
+
+      recordButton.disabled = true;
+      recordButton.innerHTML = "Recording...";
+      stopButton.disabled = false;
+
+      recorder.start();
+    });
+  });
+
+  stopButton.addEventListener("click", () => {
+    recordButton.disabled = false;
+    recordButton.innerHTML = "Record audio";
+    stopButton.disabled = true;
+
+    recorder.stop();  // automatically triggers the dataavailable event
+  });
+   
+
   form.addEventListener(
     "submit",
     async (event) => {
       event.preventDefault();
-      const name = nameInput.value;
+      const name = encodeURIComponent(nameInput.value);
       const dataUrl = previewImage.src;
       const body = JSON.stringify({ name, dataUrl });
       uploadButton.disabled = true;
@@ -170,6 +218,8 @@
       if (data.ok) {
         nameInput.value = "";
         fileInput.value = "";
+        previewImage.src = "";
+        previewAudio.src = "";
       } else {
         alert(data.error);
       }
@@ -207,7 +257,7 @@
       // uploadElement.style.maxWidth = "400px";
 
       const nameElement = document.createElement("p");
-      nameElement.textContent = upload.name;
+      nameElement.textContent = decodeURIComponent(upload.name);
 
       const previewContainer = document.createElement("div");
       previewContainer.style.display = "flex";
