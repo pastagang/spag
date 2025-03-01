@@ -258,9 +258,8 @@
   }
 
   previewAllButton.addEventListener("click", () => {
-    const uploads = document.querySelectorAll(".upload");
-    for (const upload of uploads) {
-      const previewButton = upload.querySelector("button");
+    const previewButtons = document.querySelectorAll(".preview");
+    for (const previewButton of previewButtons) {
       previewButton.click();
     }
   });
@@ -288,6 +287,7 @@
       previewContainer.style.border = "1px solid rgb(159, 174, 238)";
 
       const previewButton = document.createElement("button");
+      previewButton.className = "preview";
       previewButton.textContent = "Preview";
       previewContainer.appendChild(previewButton);
       previewButton.addEventListener("click", () => {
