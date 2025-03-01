@@ -129,6 +129,10 @@
 
 <article id="uploads"></article>
 
+<p>
+  <button id="delete-all-button" class="danger">Delete all</button>
+</p>
+
 <script type="module">
   const form = document.getElementById("form");
   const nameInput = document.getElementById("name");
@@ -140,6 +144,7 @@
   const recordButton = document.getElementById("record-button");
   const stopButton = document.getElementById("stop-recording-button");
   const previewAllButton = document.getElementById("preview-all-button");
+  const deleteAllButton = document.getElementById("delete-all-button");
 
   var recorder;
   const reader = new FileReader();
@@ -235,7 +240,7 @@
       }
       uploadButton.textContent = "Upload";
       uploadButton.disabled = false;
-      pullUploads();
+      // pullUploads();
     },
     { passive: false }
   );
@@ -261,6 +266,13 @@
     const previewButtons = document.querySelectorAll(".preview");
     for (const previewButton of previewButtons) {
       previewButton.click();
+    }
+  });
+
+  deleteAllButton.addEventListener("click", async () => {
+    const deleteButtons = document.querySelectorAll(".delete");
+    for (const deleteButton of deleteButtons) {
+      deleteButton.click();
     }
   });
 
@@ -373,7 +385,7 @@
 
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "Delete";
-      deleteButton.className = "danger";
+      deleteButton.className = "danger delete";
       deleteButton.addEventListener("click", async () => {
         deleteButton.disabled = true;
         deleteButton.textContent = "Deleting...";
