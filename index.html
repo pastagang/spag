@@ -14,7 +14,8 @@
     All uploaded things are available at
     <code>https://spag.cc/name</code><br />
 
-    Replace <code>name</code> with the name you gave the image. Names can contain spaces, emojis, anything!
+    Replace <code>name</code> with the name you gave the image. Names can
+    contain spaces, emojis, anything!
   </p>
 
   <ul>
@@ -23,7 +24,10 @@
       Please delete your uploads after you've finished with them to make space
       for others.
     </li>
-    <li>Click 'Record audio' to record your singing, then click 'Finish recording' when you are finished.</li>
+    <li>
+      Click 'Record audio' to record your singing, then click 'Finish recording'
+      when you are finished.
+    </li>
   </ul>
 </header>
 
@@ -97,10 +101,11 @@
     </div>
     <input type="file" id="file" accept="audio/*, image/*" required />
   </label>
-  <label for ="singing">
+  <label for="singing">
     <button id="record-button" type="button">Record audio</button>
-    <button id="stop-recording-button" type="button" disabled>Finish recording</button>
-
+    <button id="stop-recording-button" type="button" disabled>
+      Finish recording
+    </button>
   </label>
   <label for="name">
     Unique upload name
@@ -118,6 +123,7 @@
 
 <h2>Uploaded files</h2>
 <button id="refresh-button">Refresh</button>
+<button id="preview-all-button" hidden>Preview all</button>
 <br />
 <br />
 
@@ -133,6 +139,7 @@
   const refreshButton = document.getElementById("refresh-button");
   const recordButton = document.getElementById("record-button");
   const stopButton = document.getElementById("stop-recording-button");
+  const previewAllButton = document.getElementById("preview-all-button");
 
   var recorder;
   const reader = new FileReader();
@@ -165,31 +172,35 @@
     previewImage.style.display = "none";
   });
 
-  
   // MediaStream bits shamelessly cribbed from mozilla examples. https://mozdevs.github.io/MediaRecorder-examples/record-live-audio.js
   recordButton.addEventListener("click", () => {
     // ask if we can have ur mic pls, and then record
-    navigator.mediaDevices.getUserMedia({
-      audio: true
-    })
-    .then( function (stream) {  // uh oh... a promise
-      recorder = new MediaRecorder(stream);
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+      })
+      .then(function (stream) {
+        // uh oh... a promise
+        recorder = new MediaRecorder(stream);
 
-      // listen to dataavailable, which gets triggeled whenever there is audio available
-      recorder.addEventListener('dataavailable', (e) => {
-        // e.data is a blob with the truncated audio STREAM in it 
-        // convert it to a file so we can upload it
-        const file = new File( [e.data], "recording.ogg", {type: "audio/ogg"});
-        reader.readAsDataURL(file);
-        fileInput.required = false;  // so u can press upload without actually having uploaded a file
+        // listen to dataavailable, which gets triggeled whenever there is audio available
+        recorder.addEventListener("dataavailable", (e) => {
+          // e.data is a blob with the truncated audio STREAM in it
+          // convert it to a file so we can upload it
+          const file = new File([e.data], "recording.ogg", {
+            type: "audio/ogg",
+          });
+          reader.readAsDataURL(file);
+          fileInput.required = false; // so u can press upload without actually having uploaded a file
+        });
+
+        recordButton.disabled = true;
+
+        recordButton.innerHTML = "Recording...";
+        stopButton.disabled = false;
+
+        recorder.start();
       });
-
-      recordButton.disabled = true;
-      recordButton.innerHTML = "Recording...";
-      stopButton.disabled = false;
-
-      recorder.start();
-    });
   });
 
   stopButton.addEventListener("click", () => {
@@ -197,9 +208,8 @@
     recordButton.innerHTML = "Record audio";
     stopButton.disabled = true;
 
-    recorder.stop();  // automatically triggers the dataavailable event
+    recorder.stop(); // automatically triggers the dataavailable event
   });
-   
 
   form.addEventListener(
     "submit",
@@ -238,12 +248,22 @@
 
   async function pullUploads() {
     refreshButton.disabled = true;
+    previewAllButton.hidden = true;
     refreshButton.textContent = "Refreshing...";
     const uploads = await fetchUploads();
     renderUploads(uploads);
     refreshButton.textContent = "Refresh";
+    previewAllButton.hidden = false;
     refreshButton.disabled = false;
   }
+
+  previewAllButton.addEventListener("click", () => {
+    const uploads = document.querySelectorAll(".upload");
+    for (const upload of uploads) {
+      const previewButton = upload.querySelector("button");
+      previewButton.click();
+    }
+  });
 
   const uploadsElement = document.getElementById("uploads");
   function renderUploads(_uploads) {
@@ -267,63 +287,69 @@
       previewContainer.style.backgroundColor = "rgb(55, 67, 98)";
       previewContainer.style.border = "1px solid rgb(159, 174, 238)";
 
-      try {
-        fetch(`https://spag.cc/${upload.name}`).then(async (response) => {
-          if (!response.ok) {
-            const textElement = document.createElement("p");
-            console.log(response);
-            textElement.textContent = `Error downloading file.`;
-            previewContainer.appendChild(textElement);
-            return;
-          }
+      const previewButton = document.createElement("button");
+      previewButton.textContent = "Preview";
+      previewContainer.appendChild(previewButton);
+      previewButton.addEventListener("click", () => {
+        previewContainer.innerHTML = "";
+        try {
+          fetch(`https://spag.cc/${upload.name}`).then(async (response) => {
+            if (!response.ok) {
+              const textElement = document.createElement("p");
+              console.log(response);
+              textElement.textContent = `Error downloading file.`;
+              previewContainer.appendChild(textElement);
+              return;
+            }
 
-          const contentType = response.headers.get("content-type");
-          if (contentType.startsWith("image")) {
-            const imageElement = document.createElement("img");
-            imageElement.loading = "lazy";
-            imageElement.style.width = "100%";
-            imageElement.style.objectFit = "contain";
-            imageElement.style.height = "300px";
-            // src the response
-            const blob = await response.blob();
-            imageElement.src = URL.createObjectURL(blob);
-            imageElement.onerror = () => {
-              imageElement.remove();
-            };
-            previewContainer.appendChild(imageElement);
-          } else if (contentType.startsWith("audio")) {
-            const audioElement = document.createElement("audio");
-            audioElement.controls = true;
-            audioElement.style.width = "100%";
-            // src the response
-            const blob = await response.blob();
-            audioElement.src = URL.createObjectURL(blob);
-            audioElement.onerror = () => {
-              audioElement.remove();
-            };
-            previewContainer.appendChild(audioElement);
-          } else if (contentType.startsWith("video")) {
-            const videoElement = document.createElement("video");
-            videoElement.controls = true;
-            videoElement.style.width = "100%";
-            // src the response
-            const blob = await response.blob();
-            videoElement.src = URL.createObjectURL(blob);
-            videoElement.onerror = () => {
-              videoElement.remove();
-            };
-            previewContainer.appendChild(videoElement);
-          } else {
-            const textElement = document.createElement("p");
-            textElement.textContent = `Unsupported content type: ${contentType}`;
-            previewContainer.appendChild(textElement);
-          }
-        });
-      } catch (error) {
-        const textElement = document.createElement("p");
-        textElement.textContent = `Error downloading file.`;
-        previewContainer.appendChild(textElement);
-      }
+            const contentType = response.headers.get("content-type");
+            if (contentType.startsWith("image")) {
+              const imageElement = document.createElement("img");
+              imageElement.loading = "lazy";
+              imageElement.style.width = "100%";
+              imageElement.style.objectFit = "contain";
+              imageElement.style.height = "300px";
+              // src the response
+              const blob = await response.blob();
+              imageElement.src = URL.createObjectURL(blob);
+              imageElement.onerror = () => {
+                imageElement.remove();
+              };
+              previewContainer.appendChild(imageElement);
+            } else if (contentType.startsWith("audio")) {
+              const audioElement = document.createElement("audio");
+              audioElement.controls = true;
+              audioElement.style.width = "100%";
+              // src the response
+              const blob = await response.blob();
+              audioElement.src = URL.createObjectURL(blob);
+              audioElement.onerror = () => {
+                audioElement.remove();
+              };
+              previewContainer.appendChild(audioElement);
+            } else if (contentType.startsWith("video")) {
+              const videoElement = document.createElement("video");
+              videoElement.controls = true;
+              videoElement.style.width = "100%";
+              // src the response
+              const blob = await response.blob();
+              videoElement.src = URL.createObjectURL(blob);
+              videoElement.onerror = () => {
+                videoElement.remove();
+              };
+              previewContainer.appendChild(videoElement);
+            } else {
+              const textElement = document.createElement("p");
+              textElement.textContent = `Unsupported content type: ${contentType}`;
+              previewContainer.appendChild(textElement);
+            }
+          });
+        } catch (error) {
+          const textElement = document.createElement("p");
+          textElement.textContent = `Error downloading file.`;
+          previewContainer.appendChild(textElement);
+        }
+      });
 
       // const imageElement = document.createElement("img");
       // imageElement.loading = "lazy";
